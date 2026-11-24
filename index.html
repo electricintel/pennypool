@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#10b981" />
+  <title>PennyPool — Online Gift Card Apps & Personal Referral Hub</title>
+  <link rel="manifest" href="./manifest.json" />
+  <style>
+    :root { --bg:#000; --card:#121215; --border:#27272a; --text:#f4f4f5; --muted:#a1a1aa; --green:#10b981; --blue:#38bdf8; --amber:#f59e0b; --red:#ef4444; --purple:#c084fc; }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    body { background:var(--bg); color:var(--text); max-width:480px; margin:0 auto; padding:14px; padding-bottom:65px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; margin-bottom:12px; }
+    .row { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .label { font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); }
+    .balance { font-size:34px; font-weight:800; color:var(--green); margin:4px 0; }
+    .sub { font-size:12px; color:var(--muted); line-height:1.45; }
+    .tabs { display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; }
+    .tab { flex:1; padding:11px 6px; border-radius:12px; border:1px solid var(--border); background:var(--card); color:var(--muted); font-weight:700; font-size:11px; cursor:pointer; white-space:nowrap; }
+    .tab.active { background:var(--green); color:#000; border-color:var(--green); }
+    .filter-bar { display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; }
+    .filter-pill { padding:7px 10px; border-radius:99px; border:1px solid var(--border); background:#09090b; color:var(--muted); font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; }
+    .filter-pill.active { background:var(--blue); color:#000; border-color:var(--blue); }
+    input, textarea, select { width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:#000; color:#fff; font-size:14px; margin-top:6px; margin-bottom:12px; }
+    .btn { width:100%; padding:13px; border-radius:12px; border:none; background:var(--green); color:#000; font-weight:800; font-size:14px; cursor:pointer; text-decoration:none; display:block; text-align:center; }
+    .btn:disabled { background:#27272a; color:#71717a; cursor:not-allowed; }
+    .btn-sm { padding:8px 10px; border-radius:10px; border:1px solid var(--border); background:#1f1f23; color:#fff; font-size:12px; font-weight:700; cursor:pointer; text-decoration:none; text-align:center; }
+    .btn-danger { background:#3f1515; border:1px solid #7f1d1d; color:#fca5a5; }
+    .badge { display:inline-block; font-size:10px; padding:3px 8px; border-radius:6px; background:#1f1f23; color:var(--green); font-weight:700; margin-bottom:6px; }
+    .badge-id { background:#102533; color:var(--blue); }
+    .badge-walkin { background:#292111; color:var(--amber); }
+    .badge-sc { background:#241433; color:var(--purple); }
+    .chip-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+    .compare-box { background:#09090b; border:1px solid var(--border); border-radius:12px; padding:12px; margin-top:8px; }
+    .check-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px; border-radius:10px; background:#09090b; border:1px solid var(--border); margin-top:8px; }
+    .check-row.done { border-color:var(--green); background:#051b14; }
+    .check-btn { width:26px; height:26px; border-radius:8px; border:2px solid var(--purple); background:transparent; color:#000; font-weight:900; font-size:14px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .check-row.done .check-btn { background:var(--green); border-color:var(--green); }
+    .code-box { font-family:monospace; font-size:12px; background:#000; border:1px dashed var(--border); padding:8px 10px; border-radius:8px; color:var(--green); margin:6px 0; word-break:break-all; }
+    .progress-bar-bg { width:100%; height:10px; background:#27272a; border-radius:99px; overflow:hidden; margin:8px 0; }
+    .progress-bar-fill { height:100%; background:var(--green); transition:width 0.25s ease; }
+    .qr-wrap { background:#fff; padding:12px; border-radius:12px; display:inline-block; margin:10px auto; }
+    .toast { padding:12px; border-radius:12px; background:#064e3b; border:1px solid var(--green); color:#a7f3d0; font-size:13px; margin-bottom:12px; }
+    .toast.err { background:#450a0a; border-color:var(--red); color:#fecaca; }
+    .hidden { display:none !important; }
+  </style>
+</head>
+<body>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- INVITE BANNER (SHOWS WHEN OPENED VIA SOMEONE'S REFERRAL LINK OR FOUNDER DEFAULT) -->
+  <div id="referrer-banner" class="card hidden" style="border-color: var(--amber); background:#18140a;">
+    <span class="badge badge-walkin">Official Partner Invite</span>
+    <div style="font-size:14px; font-weight:800; color:var(--amber);" id="referrer-banner-title">You were invited!</div>
+    <p class="sub" style="margin-top:4px;">
+      Register on the 16 online gift card apps below using the partner invite links. Once you finish registering on all 16 apps, you unlock your own personal referral page to share with whomever you choose!
+    </p>
+  </div>
+
+  <!-- HEADER: PERSONAL BALANCE & REGISTRATION PROGRESS -->
+  <header class="card">
+    <div class="row">
+      <div>
+        <div class="label" id="header-greeting">My Online Gift Card Earnings</div>
+        <div id="total-earned" class="balance">$0.00</div>
+      </div>
+      <div style="text-align:right;">
+        <span class="badge" id="reg-header-badge">0 / 16 Apps Registered</span>
+        <div class="sub" style="font-size:10px;" id="vault-header-total">Card Vault: $0.00</div>
+      </div>
+    </div>
+    <p class="sub" id="header-payout-note">16 Nevada-eligible online Digital Gift Card apps (10 Phone Apps + 6 Computer Apps).</p>
+  </header>
+
+  <!-- OPTIONAL STEP 1: QUICK SETUP (USER CAN FILL OR SKIP & DESTROY FILLER) -->
+  <section id="setup-gate" class="card hidden" style="border-color: var(--green);">
+    <span class="badge">Optional Quick Setup • Stored Only on Your Device</span>
+    <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 6px;">Personalize Your Referral Page (Optional)</h2>
+    <p class="sub" style="margin-bottom: 12px;">
+      Add your display name for your referral page, or skip straight to the 16 online apps and permanently remove the Signup Filler.
+    </p>
+
+    <label class="label">Your Display Name / Handle (Shown on Your Referral Page)</label>
+    <input type="text" id="setup-name" placeholder="e.g., Alex M." />
+
+    <label class="label">Email Address (Optional • For Signup Filler)</label>
+    <input type="email" id="setup-email" placeholder="you@email.com" />
+
+    <label class="label">Preferred Digital Gift Card Type</label>
+    <select id="setup-payout-method">
+      <option value="Virtual Prepaid Visa / Mastercard">Virtual Prepaid Visa / Mastercard</option>
+      <option value="Walmart / Target Digital Gift Cards">Walmart / Target Digital Gift Cards</option>
+      <option value="Amazon / Uber / DoorDash Digital Cards">Amazon / Uber / DoorDash Digital Cards</option>
+    </select>
+
+    <button class="btn" onclick="completeAutoSetup()">Save & Start App Registrations →</button>
+    <button type="button" class="btn-sm" style="width:100%; margin-top:8px;" onclick="skipSetupAndDestroyFiller()">
+      Skip Setup & Destroy Signup Filler →
+    </button>
+  </section>
+
+  <!-- STEP 2: MAIN APP NAVIGATION -->
+  <main id="main-app" class="hidden">
+    <nav class="tabs" id="main-tabs-nav">
+      <button class="tab active" id="tab-btn-earn" onclick="switchTab('earn')">1. Online Apps</button>
+      <button class="tab" id="tab-btn-affiliate" onclick="switchTab('affiliate')">2. My Referral Page</button>
+      <button class="tab" id="tab-btn-wallet" onclick="switchTab('wallet')">3. Card Vault</button>
+      <button class="tab" id="tab-btn-filler" onclick="switchTab('filler')">4. Signup Filler</button>
+    </nav>
+
+    <!-- TAB 1: 16 ONLINE DIGITAL GIFT CARD APPS (PHONE VS. COMPUTER) -->
+    <section id="view-earn">
+      <div class="card" style="border-color: var(--amber);">
+        <div class="row">
+          <strong style="font-size:14px;">Partner Referral Page Unlock Progress</strong>
+          <span class="badge badge-walkin" id="unlock-count-text">0 / 16 Registered</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="unlock-progress-fill" style="width:0%;"></div>
+        </div>
+        <p class="sub" id="unlock-status-msg">
+          Register on all 16 online apps below (tap <strong>"Mark Registered"</strong> on each app after signing up) to unlock your own shareable referral page.
+        </p>
+        <button type="button" class="btn-sm" style="width:100%; margin-top:8px; background:var(--amber); color:#000;" onclick="switchTab('affiliate')">
+          Open My Referral Page & Link Builder →
+        </button>
+      </div>
+
+      <!-- QUICK APP FILTERS -->
+      <div class="filter-bar">
+        <button type="button" class="filter-pill active" id="filter-all" onclick="setAppFilter('all')">All 16 Apps</button>
+        <button type="button" class="filter-pill" id="filter-fast" onclick="setAppFilter('fast')">⚡ Fastest $0–$3 Cashout</button>
+        <button type="button" class="filter-pill" id="filter-phone" onclick="setAppFilter('phone')">📱 Phone (10)</button>
+        <button type="button" class="filter-pill" id="filter-computer" onclick="setAppFilter('computer')">💻 Computer (6)</button>
+      </div>
+
+      <!-- LOG RECEIVED GIFT CARD PAYOUT -->
+      <div class="card" style="border-color:#3f3f46;">
+        <div class="row" style="margin-bottom:8px;">
